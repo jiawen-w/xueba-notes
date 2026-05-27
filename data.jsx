@@ -179,7 +179,7 @@ const PIPELINE_STAGES = [
 // 本地开发：留空，前端用相对路径 /api/...
 // 线上部署：填入 Railway / Render 等部署地址，如：
 //   const BACKEND_URL = 'https://xueba-backend-production.up.railway.app';
-const BACKEND_URL = '';
+const BACKEND_URL = 'https://xueba-backend.onrender.com';
 
 // 演示模式 = 没有配置后端地址 且 不在 localhost
 const IS_DEMO_HOST = !BACKEND_URL && (() => {
