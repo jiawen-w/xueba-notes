@@ -16,12 +16,7 @@ function estimateConvertTime(videoSec) {
   return `约 ${Math.max(2, min)} 分钟`;
 }
 
-// 判断是否在静态演示模式（GitHub Pages / 没有后端服务）
-const IS_DEMO_HOST = (() => {
-  const h = window.location.hostname;
-  return h.includes('github.io') || h.includes('github.com') ||
-         (!h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('0.0.0.0'));
-})();
+// IS_DEMO_HOST 由 data.jsx 定义（最先加载），这里直接使用
 
 function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
   const [state, setState] = useState('empty'); // empty / probing / single / playlist / converting / done

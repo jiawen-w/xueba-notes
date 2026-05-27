@@ -1,12 +1,14 @@
 // 首页：Hero + 转换入口 + 工作流展示 + 价格预告
 function HomePage({ navigate, user }) {
   const [url, setUrl] = useState('');
+  const [showDemoTip, setShowDemoTip] = useState(false);
   const inputRef = useRef(null);
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setUrl(text);
+      setShowDemoTip(false);
       inputRef.current?.focus();
     } catch {
       inputRef.current?.focus();
@@ -18,7 +20,11 @@ function HomePage({ navigate, user }) {
       inputRef.current?.focus();
       return;
     }
-    // 把 URL 塞给工作台
+    // 演示模式：不跳工作台，直接给出提示
+    if (IS_DEMO_HOST) {
+      setShowDemoTip(true);
+      return;
+    }
     window.__pendingUrl = url.trim();
     navigate('workbench');
   };
@@ -94,17 +100,50 @@ function HomePage({ navigate, user }) {
                 </button>
               </div>
 
-              <div style={{display:'flex', alignItems:'center', gap: 20, marginTop: 24, color: 'var(--ink-3)', fontSize: 13}}>
-                <span style={{display:'flex', alignItems:'center', gap: 6}}>
-                  <IconCheck size={14} style={{color: 'var(--success)'}}/> 无需登录可试 1 次
-                </span>
-                <span style={{display:'flex', alignItems:'center', gap: 6}}>
-                  <IconCheck size={14} style={{color: 'var(--success)'}}/> 平均 3-5 分钟出结果
-                </span>
-                <span style={{display:'flex', alignItems:'center', gap: 6}}>
-                  <IconCheck size={14} style={{color: 'var(--success)'}}/> 支持合集
-                </span>
-              </div>
+              {/* 演示模式内嵌提示 */}
+              {showDemoTip && (
+                <div style={{
+                  marginTop: 16, maxWidth: 560,
+                  padding: '14px 18px',
+                  background: 'linear-gradient(135deg,#FFF5E0,#FFF0F5)',
+                  border: '1px solid #FFD9A0',
+                  borderRadius: 'var(--r-lg)',
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                }}>
+                  <span style={{fontSize: 20, flexShrink: 0}}>🖥️</span>
+                  <div style={{fontSize: 13, color: '#92400E', flex: 1}}>
+                    <strong>在线演示版</strong>——AI 转换需要本地 Python 后端，这里无法运行。
+                    <br/>不过你可以先浏览预设的示例教程，体验完整的阅读功能！
+                    <div style={{display:'flex', gap: 8, marginTop: 10, flexWrap: 'wrap'}}>
+                      <button onClick={() => navigate('library')} style={{
+                        padding: '6px 14px', borderRadius: 'var(--r-sm)',
+                        background: '#FB7299', color: '#fff',
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      }}>查看示例教程 →</button>
+                      <button onClick={() => { setShowDemoTip(false); navigate('workbench'); }} style={{
+                        padding: '6px 14px', borderRadius: 'var(--r-sm)',
+                        background: 'transparent', color: '#92400E',
+                        border: '1px solid #FFD9A0',
+                        fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                      }}>了解如何本地部署</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!showDemoTip && (
+                <div style={{display:'flex', alignItems:'center', gap: 20, marginTop: 24, color: 'var(--ink-3)', fontSize: 13}}>
+                  <span style={{display:'flex', alignItems:'center', gap: 6}}>
+                    <IconCheck size={14} style={{color: 'var(--success)'}}/> 无需登录可试 1 次
+                  </span>
+                  <span style={{display:'flex', alignItems:'center', gap: 6}}>
+                    <IconCheck size={14} style={{color: 'var(--success)'}}/> 平均 3-5 分钟出结果
+                  </span>
+                  <span style={{display:'flex', alignItems:'center', gap: 6}}>
+                    <IconCheck size={14} style={{color: 'var(--success)'}}/> 支持合集
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 右侧：装饰预览卡 + 喵 */}
