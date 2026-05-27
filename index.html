@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>学霸笔记 · 视频转图文教程</title>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#FFE9F1"/>
+  <g transform="translate(180,180)">
+    <rect x="0" y="40" width="240" height="180" rx="48" fill="#FB7299"/>
+    <path d="M60,40 L40,0 L100,30 Z" fill="#FB7299"/>
+    <path d="M180,40 L200,0 L140,30 Z" fill="#FB7299"/>
+    <ellipse cx="90" cy="130" rx="18" ry="24" fill="#fff"/>
+    <ellipse cx="150" cy="130" rx="18" ry="24" fill="#fff"/>
+    <circle cx="93" cy="123" r="6" fill="#18191C"/>
+    <circle cx="153" cy="123" r="6" fill="#18191C"/>
+    <path d="M105,170 Q120,185 135,170" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
+</template>
+
+<link rel="stylesheet" href="styles.css"/>
+
+<!-- React + Babel (pinned) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- 共享组件 -->
+<script type="text/babel" src="components/icons.jsx"></script>
+<script type="text/babel" src="components/shell.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+
+<!-- 页面 -->
+<script type="text/babel" src="pages/home.jsx"></script>
+<script type="text/babel" src="pages/workbench.jsx"></script>
+<script type="text/babel" src="pages/result.jsx"></script>
+<script type="text/babel" src="pages/library.jsx"></script>
+<script type="text/babel" src="pages/pricing.jsx"></script>
+<script type="text/babel" src="pages/account.jsx"></script>
+<script type="text/babel" src="pages/auth.jsx"></script>
+
+<!-- Tweaks 面板 -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<!-- App -->
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

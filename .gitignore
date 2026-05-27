@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local secrets / keys
+*_local.*
+*.local.js
+*.local.jsx
+
+# Thumbnails
+._*
