@@ -127,6 +127,9 @@ function App() {
       </main>
       <Footer/>
 
+      {/* 移动端底部导航 */}
+      <MobileTabBar route={route} navigate={navigate}/>
+
       {/* 客服悬浮按钮 */}
       <FloatingService/>
 

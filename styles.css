@@ -360,3 +360,96 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; }
   display: inline-block;
   animation: float 4s ease-in-out infinite;
 }
+
+/* ============================================
+   移动端适配 ≤ 768px
+   ============================================ */
+
+.desktop-only { display: flex !important; }
+.mobile-only  { display: none !important; }
+
+/* 底部导航栏 */
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line-soft);
+  z-index: 50;
+  safe-area-inset-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mobile-tab-bar > button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-3);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color .15s;
+}
+.mobile-tab-bar > button.tab-active {
+  color: var(--bili-pink);
+}
+.mobile-tab-bar > button.tab-convert {
+  color: #fff;
+}
+.mobile-tab-bar .tab-convert-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mobile-tab-bar .tab-convert-icon {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bili-pink);
+  box-shadow: var(--sh-pink);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  margin-top: -14px;
+}
+
+@media (max-width: 768px) {
+  /* 显示/隐藏 */
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: flex !important; }
+
+  /* 字体缩放 */
+  .h-display { font-size: 34px; letter-spacing: -.01em; }
+  .h-1  { font-size: 24px; }
+  .h-2  { font-size: 20px; }
+  .h-3  { font-size: 17px; }
+  .h-4  { font-size: 15px; }
+  .text-lg { font-size: 14px; }
+
+  /* 容器留边 */
+  .container, .container-wide { padding: 0 16px; }
+
+  /* 主区底部留出 tab bar 高度 */
+  .app-main { padding: 12px 0 calc(72px + env(safe-area-inset-bottom, 0px)); }
+
+  /* 底部导航栏 */
+  .mobile-tab-bar { display: flex; }
+
+  /* 圆角缩小一点 */
+  .btn-xl { padding: 12px 24px; font-size: 15px; }
+  .btn-lg { padding: 10px 20px; font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .h-display { font-size: 28px; }
+  .h-1  { font-size: 22px; }
+  .h-2  { font-size: 18px; }
+}

@@ -3,6 +3,7 @@ function HomePage({ navigate, user }) {
   const [url, setUrl] = useState('');
   const [showDemoTip, setShowDemoTip] = useState(false);
   const inputRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const handlePaste = async () => {
     try {
@@ -43,8 +44,8 @@ function HomePage({ navigate, user }) {
           background: 'radial-gradient(circle, #E3F4FB 0%, transparent 70%)',
         }}/>
 
-        <div className="container" style={{position:'relative', paddingTop: 60}}>
-          <div style={{display:'grid', gridTemplateColumns: '1.4fr 1fr', gap: 60, alignItems: 'center'}}>
+        <div className="container" style={{position:'relative', paddingTop: isMobile ? 32 : 60}}>
+          <div style={{display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: isMobile ? 24 : 60, alignItems: 'center'}}>
             <div className="anim-fadeUp">
               <div style={{
                 display:'inline-flex', alignItems:'center', gap: 8,
@@ -70,35 +71,70 @@ function HomePage({ navigate, user }) {
               </p>
 
               {/* ───── 一步式输入框 ───── */}
-              <div style={{
-                display:'flex', gap: 8, alignItems:'center',
-                padding: 6,
-                background: '#fff',
-                borderRadius: 'var(--r-full)',
-                boxShadow: 'var(--sh-md)',
-                maxWidth: 560,
-              }}>
-                <div style={{paddingLeft: 14, color: 'var(--bili-pink)'}}><IconLink size={20}/></div>
-                <input ref={inputRef}
-                  value={url}
-                  onChange={e => setUrl(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && startConvert()}
-                  placeholder="粘贴 B 站视频链接 或 BV 号..."
-                  style={{
-                    flex: 1, height: 44, border: 0, outline: 'none',
-                    fontSize: 15, background: 'transparent', fontFamily: 'inherit',
-                  }}/>
-                {!url && (
-                  <button onClick={handlePaste} className="btn btn-ghost btn-sm"
-                    style={{fontSize: 12, padding: '6px 12px'}}>
-                    <IconPaste size={14}/> 粘贴
+              {isMobile ? (
+                /* 移动端：输入框 + 按钮竖向排列 */
+                <div style={{display:'flex', flexDirection:'column', gap: 10, maxWidth: '100%'}}>
+                  <div style={{
+                    display:'flex', gap: 8, alignItems:'center',
+                    padding: '6px 6px 6px 14px',
+                    background: '#fff',
+                    borderRadius: 'var(--r-full)',
+                    boxShadow: 'var(--sh-md)',
+                  }}>
+                    <IconLink size={18} style={{color:'var(--bili-pink)', flexShrink:0}}/>
+                    <input ref={inputRef}
+                      value={url}
+                      onChange={e => setUrl(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && startConvert()}
+                      placeholder="粘贴 B站链接 或 BV号..."
+                      style={{
+                        flex: 1, height: 40, border: 0, outline: 'none',
+                        fontSize: 14, background: 'transparent', fontFamily: 'inherit', minWidth: 0,
+                      }}/>
+                    {!url && (
+                      <button onClick={handlePaste} className="btn btn-ghost btn-sm"
+                        style={{fontSize: 12, padding: '5px 10px', flexShrink: 0}}>
+                        <IconPaste size={13}/>
+                      </button>
+                    )}
+                  </div>
+                  <button onClick={startConvert} className="btn btn-primary"
+                    style={{height: 46, fontWeight: 600, borderRadius: 'var(--r-full)', fontSize: 15}}>
+                    开始转换 <IconArrowRight size={16}/>
                   </button>
-                )}
-                <button onClick={startConvert} className="btn btn-primary"
-                  style={{height: 44, padding: '0 22px', fontWeight: 600}}>
-                  开始转换 <IconArrowRight size={16}/>
-                </button>
-              </div>
+                </div>
+              ) : (
+                /* 桌面端：横向 pill */
+                <div style={{
+                  display:'flex', gap: 8, alignItems:'center',
+                  padding: 6,
+                  background: '#fff',
+                  borderRadius: 'var(--r-full)',
+                  boxShadow: 'var(--sh-md)',
+                  maxWidth: 560,
+                }}>
+                  <div style={{paddingLeft: 14, color: 'var(--bili-pink)'}}><IconLink size={20}/></div>
+                  <input ref={inputRef}
+                    value={url}
+                    onChange={e => setUrl(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && startConvert()}
+                    placeholder="粘贴 B 站视频链接 或 BV 号..."
+                    style={{
+                      flex: 1, height: 44, border: 0, outline: 'none',
+                      fontSize: 15, background: 'transparent', fontFamily: 'inherit',
+                    }}/>
+                  {!url && (
+                    <button onClick={handlePaste} className="btn btn-ghost btn-sm"
+                      style={{fontSize: 12, padding: '6px 12px'}}>
+                      <IconPaste size={14}/> 粘贴
+                    </button>
+                  )}
+                  <button onClick={startConvert} className="btn btn-primary"
+                    style={{height: 44, padding: '0 22px', fontWeight: 600}}>
+                    开始转换 <IconArrowRight size={16}/>
+                  </button>
+                </div>
+              )}
 
               {/* 演示模式内嵌提示 */}
               {showDemoTip && (
@@ -146,20 +182,22 @@ function HomePage({ navigate, user }) {
               )}
             </div>
 
-            {/* 右侧：装饰预览卡 + 喵 */}
-            <div style={{position:'relative'}}>
-              <div className="mascot" style={{position:'absolute', top: -40, right: -10, zIndex: 2}}>
-                <Mascot size={110}/>
+            {/* 右侧：装饰预览卡 + 喵（移动端隐藏） */}
+            {!isMobile && (
+              <div style={{position:'relative'}}>
+                <div className="mascot" style={{position:'absolute', top: -40, right: -10, zIndex: 2}}>
+                  <Mascot size={110}/>
+                </div>
+                <PreviewStack/>
               </div>
-              <PreviewStack/>
-            </div>
+            )}
           </div>
 
           {/* ── 数据条 ── */}
           <div style={{
-            display:'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32,
-            marginTop: 80,
-            padding: '32px 40px',
+            display:'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 16 : 32,
+            marginTop: isMobile ? 32 : 80,
+            padding: isMobile ? '20px 20px' : '32px 40px',
             background: 'rgba(255,255,255,.6)',
             borderRadius: 'var(--r-xl)',
             backdropFilter: 'blur(8px)',
@@ -174,73 +212,94 @@ function HomePage({ navigate, user }) {
       </section>
 
       {/* ───── 工作流 ───── */}
-      <section style={{padding: '80px 0', background: '#fff'}}>
+      <section style={{padding: isMobile ? '40px 0' : '80px 0', background: '#fff'}}>
         <div className="container">
-          <div style={{textAlign:'center', marginBottom: 56}}>
+          <div style={{textAlign:'center', marginBottom: isMobile ? 28 : 56}}>
             <div className="tag tag-blue" style={{marginBottom: 12}}>
               <IconBolt size={12}/> 完整流水线
             </div>
             <h2 className="h-1" style={{margin:'0 0 12px'}}>从一条链接到一篇教程</h2>
-            <p className="text-lg t-muted" style={{margin:0}}>幕后是一条完整的 AI 流水线 · 7 个步骤全自动</p>
+            {!isMobile && <p className="text-lg t-muted" style={{margin:0}}>幕后是一条完整的 AI 流水线 · 7 个步骤全自动</p>}
           </div>
 
-          <div style={{
-            display:'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: 0,
-            position: 'relative',
-          }}>
-            {/* 连接线 */}
-            <div style={{
-              position:'absolute', top: 28, left: '7%', right: '7%',
-              height: 2, background: 'var(--line)',
-              zIndex: 0,
-            }}/>
-            {PIPELINE_STAGES.map((stage, i) => {
-              const IconC = window[stage.icon];
-              const color = i < 3 ? 'var(--bili-pink)' : i < 5 ? 'var(--bili-blue)' : '#FF8AB1';
-              return (
-                <div key={stage.id} style={{
-                  display:'flex', flexDirection:'column', alignItems:'center',
-                  position: 'relative', zIndex: 1,
-                  textAlign: 'center', padding: '0 6px',
-                }}>
-                  <div style={{
-                    width: 56, height: 56, borderRadius: '50%',
-                    background: '#fff',
-                    border: `2px solid ${color}`,
-                    color: color,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    marginBottom: 16,
-                    boxShadow: `0 4px 12px ${color}33`,
+          {isMobile ? (
+            /* 移动端：2列网格 */
+            <div style={{display:'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12}}>
+              {PIPELINE_STAGES.map((stage, i) => {
+                const IconC = window[stage.icon];
+                const color = i < 3 ? 'var(--bili-pink)' : i < 5 ? 'var(--bili-blue)' : '#FF8AB1';
+                return (
+                  <div key={stage.id} style={{
+                    display:'flex', alignItems:'center', gap: 12,
+                    padding: '12px 14px',
+                    background: 'var(--bg)',
+                    borderRadius: 'var(--r-md)',
                   }}>
-                    <IconC size={22}/>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                      background: '#fff', border: `2px solid ${color}`, color: color,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                    }}>
+                      <IconC size={17}/>
+                    </div>
+                    <div>
+                      <div style={{fontWeight: 600, fontSize: 12}}>{stage.name}</div>
+                      <div style={{fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.3}}>{stage.desc}</div>
+                    </div>
                   </div>
-                  <div style={{fontWeight: 600, fontSize: 13, marginBottom: 4}}>{stage.name}</div>
-                  <div style={{fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.4}}>{stage.desc}</div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* 桌面端：横向7列 */
+            <div style={{display:'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0, position: 'relative'}}>
+              <div style={{
+                position:'absolute', top: 28, left: '7%', right: '7%',
+                height: 2, background: 'var(--line)', zIndex: 0,
+              }}/>
+              {PIPELINE_STAGES.map((stage, i) => {
+                const IconC = window[stage.icon];
+                const color = i < 3 ? 'var(--bili-pink)' : i < 5 ? 'var(--bili-blue)' : '#FF8AB1';
+                return (
+                  <div key={stage.id} style={{
+                    display:'flex', flexDirection:'column', alignItems:'center',
+                    position: 'relative', zIndex: 1,
+                    textAlign: 'center', padding: '0 6px',
+                  }}>
+                    <div style={{
+                      width: 56, height: 56, borderRadius: '50%',
+                      background: '#fff', border: `2px solid ${color}`, color: color,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      marginBottom: 16, boxShadow: `0 4px 12px ${color}33`,
+                    }}>
+                      <IconC size={22}/>
+                    </div>
+                    <div style={{fontWeight: 600, fontSize: 13, marginBottom: 4}}>{stage.name}</div>
+                    <div style={{fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.4}}>{stage.desc}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
       {/* ───── 案例 ───── */}
-      <section style={{padding: '80px 0', background: 'var(--bg)'}}>
+      <section style={{padding: isMobile ? '40px 0' : '80px 0', background: 'var(--bg)'}}>
         <div className="container">
-          <div style={{display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom: 32}}>
+          <div style={{display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom: isMobile ? 20 : 32}}>
             <div>
               <div className="tag tag-pink" style={{marginBottom: 12}}><IconFire size={12}/> 最近热门</div>
               <h2 className="h-1" style={{margin:0}}>看看大家都在学什么</h2>
             </div>
-            <button onClick={() => navigate('library')} className="btn btn-outline">
+            <button onClick={() => navigate('library')} className="btn btn-outline" style={{flexShrink: 0}}>
               查看更多 <IconArrowRight size={14}/>
             </button>
           </div>
           <div style={{
             display:'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? 12 : 20,
           }}>
             {SAMPLE_TUTORIALS.slice(-3).map(t => (
               <TutorialCard key={t.id} tutorial={t} onClick={() => {

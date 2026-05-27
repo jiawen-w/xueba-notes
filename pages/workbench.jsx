@@ -19,6 +19,7 @@ function estimateConvertTime(videoSec) {
 // IS_DEMO_HOST 由 data.jsx 定义（最先加载），这里直接使用
 
 function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
+  const isMobile = useIsMobile();
   const [state, setState] = useState('empty'); // empty / probing / single / playlist / converting / done
   const [url, setUrl] = useState('');
   const [probed, setProbed] = useState(null);
@@ -445,6 +446,7 @@ function EmptyState({ url, setUrl, onSubmit, probing }) {
 
 // ───── 2. 单视频确认 ─────
 function SingleVideoState({ info, url, onCancel, onStart, user }) {
+  const isMobile = useIsMobile();
   const convertTime = estimateConvertTime(parseDurSec(info.duration));
   const gradients = {
     'gradient-1': 'linear-gradient(135deg, #FB7299 0%, #FFB36B 100%)',
@@ -462,17 +464,17 @@ function SingleVideoState({ info, url, onCancel, onStart, user }) {
     <div className="anim-fadeUp" style={{
       background: '#fff',
       borderRadius: 'var(--r-2xl)',
-      padding: 32,
+      padding: isMobile ? 20 : 32,
       boxShadow: 'var(--sh-md)',
     }}>
       <div className="tag tag-blue" style={{marginBottom: 16}}>
         <IconCheck size={12}/> 识别为单集视频
       </div>
 
-      <div style={{display:'flex', gap: 24, marginBottom: 24}}>
+      <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 24, marginBottom: 24}}>
         {/* 封面 */}
         <div style={{
-          width: 240, height: 135, flexShrink: 0,
+          width: isMobile ? '100%' : 240, height: isMobile ? 160 : 135, flexShrink: 0,
           borderRadius: 'var(--r-md)',
           background: grad,
           position:'relative',
@@ -732,6 +734,7 @@ function PlaylistState({ probed, episodes, setEpisodes, rangeSpec, setRangeSpec,
 
 // ───── 4. 转换进行中 ─────
 function ConvertingState({ pipeline, info }) {
+  const isMobile = useIsMobile();
   const logRef = useRef(null);
   useEffect(() => {
     if (logRef.current) {
@@ -772,8 +775,8 @@ function ConvertingState({ pipeline, info }) {
       {/* 7 阶段 */}
       <div style={{
         display:'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: 8,
+        gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : 'repeat(7, 1fr)',
+        gap: isMobile ? 6 : 8,
         marginBottom: 24,
       }}>
         {PIPELINE_STAGES.map((stage, i) => {

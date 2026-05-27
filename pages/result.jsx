@@ -165,21 +165,26 @@ ${kp.notes ? `<div class="notes">⚠️ ${kp.notes}</div>` : ''}
     }
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <div data-screen-label="03 结果详情">
       {/* ───── 标题栏 ───── */}
       <div className="container-wide" style={{maxWidth: 1320}}>
         <div style={{
           display:'flex', alignItems:'center', justifyContent:'space-between',
-          marginBottom: 24,
+          marginBottom: isMobile ? 16 : 24,
+          flexWrap: 'wrap', gap: 8,
         }}>
           <button onClick={() => navigate('library')} className="btn btn-ghost btn-sm">
-            <IconArrowLeft size={14}/> 我的教程
+            <IconArrowLeft size={14}/> {isMobile ? '返回' : '我的教程'}
           </button>
           <div style={{display:'flex', gap: 8}}>
-            <button className="btn btn-outline btn-sm">
-              <IconHeart size={14}/> 收藏
-            </button>
+            {!isMobile && (
+              <button className="btn btn-outline btn-sm">
+                <IconHeart size={14}/> 收藏
+              </button>
+            )}
             <button onClick={() => setShareOpen(true)} className="btn btn-outline btn-sm">
               <IconShare size={14}/> 分享
             </button>
@@ -189,50 +194,53 @@ ${kp.notes ? `<div class="notes">⚠️ ${kp.notes}</div>` : ''}
           </div>
         </div>
 
-        {/* ───── 三栏布局 ───── */}
+        {/* ───── 布局：桌面三栏 / 移动单栏 ───── */}
         <div style={{
           display:'grid',
-          gridTemplateColumns: '220px 1fr 280px',
-          gap: 24,
+          gridTemplateColumns: isMobile ? '1fr' : '220px 1fr 280px',
+          gap: isMobile ? 0 : 24,
           alignItems: 'flex-start',
         }}>
           {/* 左：目录 */}
-          <div style={{
-            position: 'sticky', top: 88,
-            maxHeight: 'calc(100vh - 120px)',
-            overflowY: 'auto',
-          }}>
-            <div style={{fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase',
-              letterSpacing: '.06em', marginBottom: 12, paddingLeft: 8}}>
-              目录 · {tutorial.keypoints.length} 节
+          {/* 左侧目录（移动端隐藏） */}
+          {!isMobile && (
+            <div style={{
+              position: 'sticky', top: 88,
+              maxHeight: 'calc(100vh - 120px)',
+              overflowY: 'auto',
+            }}>
+              <div style={{fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase',
+                letterSpacing: '.06em', marginBottom: 12, paddingLeft: 8}}>
+                目录 · {tutorial.keypoints.length} 节
+              </div>
+              <div style={{display:'flex', flexDirection:'column', gap: 2}}>
+                {tutorial.keypoints.map((kp, i) => (
+                  <button key={i} onClick={() => scrollToKp(i)}
+                    style={{
+                      display:'flex', alignItems:'flex-start', gap: 8,
+                      padding: '8px 10px', borderRadius: 'var(--r-sm)',
+                      textAlign:'left',
+                      background: activeKp === i ? 'var(--bili-pink-soft)' : 'transparent',
+                      color: activeKp === i ? 'var(--bili-pink-deep)' : 'var(--ink-2)',
+                      transition: 'background .15s',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: activeKp === i ? 600 : 500,
+                    }}>
+                    <span style={{
+                      minWidth: 18, height: 18, borderRadius: 4,
+                      background: activeKp === i ? 'var(--bili-pink)' : 'var(--bg-deep)',
+                      color: activeKp === i ? '#fff' : 'var(--ink-3)',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontSize: 10, fontWeight: 600,
+                      flexShrink: 0,
+                    }}>{kp.idx}</span>
+                    <span style={{lineHeight: 1.45}}>{kp.title}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div style={{display:'flex', flexDirection:'column', gap: 2}}>
-              {tutorial.keypoints.map((kp, i) => (
-                <button key={i} onClick={() => scrollToKp(i)}
-                  style={{
-                    display:'flex', alignItems:'flex-start', gap: 8,
-                    padding: '8px 10px', borderRadius: 'var(--r-sm)',
-                    textAlign:'left',
-                    background: activeKp === i ? 'var(--bili-pink-soft)' : 'transparent',
-                    color: activeKp === i ? 'var(--bili-pink-deep)' : 'var(--ink-2)',
-                    transition: 'background .15s',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: activeKp === i ? 600 : 500,
-                  }}>
-                  <span style={{
-                    minWidth: 18, height: 18, borderRadius: 4,
-                    background: activeKp === i ? 'var(--bili-pink)' : 'var(--bg-deep)',
-                    color: activeKp === i ? '#fff' : 'var(--ink-3)',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize: 10, fontWeight: 600,
-                    flexShrink: 0,
-                  }}>{kp.idx}</span>
-                  <span style={{lineHeight: 1.45}}>{kp.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* 中：教程内容 */}
           <article ref={contentRef} style={{
@@ -308,8 +316,8 @@ ${kp.notes ? `<div class="notes">⚠️ ${kp.notes}</div>` : ''}
             </div>
           </article>
 
-          {/* 右：操作面板 */}
-          <aside style={{
+          {/* 右：操作面板（移动端隐藏，功能通过导出按钮弹窗访问） */}
+          {!isMobile && <aside style={{
             position: 'sticky', top: 88,
             display:'flex', flexDirection:'column', gap: 16,
           }}>
@@ -375,7 +383,7 @@ ${kp.notes ? `<div class="notes">⚠️ ${kp.notes}</div>` : ''}
                 textAlign: 'left',
               }}>问我任何问题 ...</button>
             </div>
-          </aside>
+          </aside>}
         </div>
       </div>
 
