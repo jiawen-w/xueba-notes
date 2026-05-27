@@ -242,7 +242,7 @@ function HomePage({ navigate, user }) {
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 20,
           }}>
-            {SAMPLE_TUTORIALS.slice(0, 3).map(t => (
+            {SAMPLE_TUTORIALS.slice(-3).map(t => (
               <TutorialCard key={t.id} tutorial={t} onClick={() => {
                 window.__currentTutorialId = t.id;
                 navigate('result');
