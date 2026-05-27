@@ -16,6 +16,13 @@ function estimateConvertTime(videoSec) {
   return `约 ${Math.max(2, min)} 分钟`;
 }
 
+// 判断是否在静态演示模式（GitHub Pages / 没有后端服务）
+const IS_DEMO_HOST = (() => {
+  const h = window.location.hostname;
+  return h.includes('github.io') || h.includes('github.com') ||
+         (!h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('0.0.0.0'));
+})();
+
 function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
   const [state, setState] = useState('empty'); // empty / probing / single / playlist / converting / done
   const [url, setUrl] = useState('');
@@ -24,6 +31,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
   const [rangeSpec, setRangeSpec] = useState('1-5');
   const [pipeline, setPipeline] = useState({ stage: 0, percent: 0, logs: [] });
   const [resultData, setResultData] = useState(null);
+  const [probeError, setProbeError] = useState('');
   const esRef = useRef(null);
 
   // 接收首页传来的 URL
@@ -37,6 +45,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
   }, []);
 
   const probeUrl = async (u) => {
+    setProbeError('');
     setState('probing');
     try {
       const resp = await fetch('/api/probe', {
@@ -45,7 +54,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
         body: JSON.stringify({ url: u.trim() }),
       });
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ detail: '网络错误' }));
+        const err = await resp.json().catch(() => ({ detail: '请求失败' }));
         throw new Error(err.detail || '请求失败');
       }
       const data = await resp.json();
@@ -57,8 +66,14 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
         setState('single');
       }
     } catch (e) {
-      alert('探测失败：' + e.message);
       setState('empty');
+      // 区分：后端不存在（演示模式）vs 真正的请求错误
+      const isNetErr = e instanceof TypeError || e.message.includes('Failed to fetch') || e.message.includes('网络');
+      if (isNetErr) {
+        setProbeError('backend_unavailable');
+      } else {
+        setProbeError(e.message);
+      }
     }
   };
 
@@ -147,6 +162,39 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
 
   return (
     <div className="container" data-screen-label="02 转换工作台" style={{maxWidth: 960}}>
+
+      {/* ── 演示模式提示条（仅在没有后端时显示）── */}
+      {IS_DEMO_HOST && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          background: 'linear-gradient(135deg,#FFF5E0,#FFF0F5)',
+          border: '1px solid #FFD9A0',
+          borderRadius: 'var(--r-lg)',
+          padding: '12px 18px',
+          marginBottom: 24,
+          fontSize: 13,
+        }}>
+          <span style={{fontSize: 18}}>🖥️</span>
+          <div style={{flex: 1, minWidth: 200}}>
+            <strong style={{color:'#B45309'}}>在线演示版</strong>
+            <span style={{color:'#92400E', marginLeft: 6}}>
+              AI 转换功能需要在本地运行后端服务（Python + FastAPI）。
+              在线版可以浏览示例教程，体验完整阅读功能。
+            </span>
+          </div>
+          <button
+            onClick={() => navigate('library')}
+            style={{
+              padding: '6px 14px', borderRadius: 'var(--r-sm)',
+              background: '#FB7299', color: '#fff',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+            查看示例教程 →
+          </button>
+        </div>
+      )}
+
       {/* 标题区 */}
       <div style={{textAlign:'center', marginBottom: 32}}>
         <div className="tag tag-pink" style={{marginBottom: 12}}>
@@ -158,12 +206,48 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
 
       {/* 主区域：根据 state 切换 */}
       {(state === 'empty' || state === 'probing') && (
-        <EmptyState
-          url={url}
-          setUrl={setUrl}
-          onSubmit={handleSubmit}
-          probing={state === 'probing'}
-        />
+        <>
+          <EmptyState
+            url={url}
+            setUrl={setUrl}
+            onSubmit={handleSubmit}
+            probing={state === 'probing'}
+          />
+          {/* 探测错误内嵌提示 */}
+          {probeError && (
+            <div style={{
+              maxWidth: 720, margin: '16px auto 0',
+              padding: '14px 18px',
+              borderRadius: 'var(--r-lg)',
+              background: probeError === 'backend_unavailable' ? '#FFF5E0' : '#FFF5F8',
+              border: `1px solid ${probeError === 'backend_unavailable' ? '#FFD9A0' : '#FFBDD0'}`,
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+            }}>
+              <span style={{fontSize: 18, flexShrink: 0}}>
+                {probeError === 'backend_unavailable' ? '💡' : '⚠️'}
+              </span>
+              <div style={{fontSize: 13, color: probeError === 'backend_unavailable' ? '#92400E' : '#c0392b'}}>
+                {probeError === 'backend_unavailable' ? (
+                  <>
+                    <strong>后端服务未连接</strong>——在线版无法执行 AI 转换。
+                    如需使用转换功能，请在本地启动后端：
+                    <code style={{display:'block', marginTop: 6, padding: '6px 10px',
+                      background:'rgba(0,0,0,.05)', borderRadius: 4, fontSize: 12, userSelect:'all'}}>
+                      cd backend && uvicorn main:app --host 0.0.0.0 --port 8000
+                    </code>
+                    <button onClick={() => navigate('library')} style={{
+                      marginTop: 8, padding: '4px 12px',
+                      background: '#FB7299', color: '#fff',
+                      borderRadius: 'var(--r-sm)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    }}>或浏览示例教程 →</button>
+                  </>
+                ) : (
+                  <><strong>探测失败</strong>：{probeError}</>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {state === 'single' && (
