@@ -28,6 +28,9 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
   const [resultData, setResultData] = useState(null);
   const [probeError, setProbeError] = useState('');
   const esRef = useRef(null);
+  const jobIdRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+  const pollTimerRef = useRef(null);
 
   // 接收首页传来的 URL
   useEffect(() => {
@@ -36,7 +39,11 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
       probeUrl(window.__pendingUrl);
       window.__pendingUrl = null;
     }
-    return () => { if (esRef.current) esRef.current.close(); };
+    return () => {
+      if (esRef.current) esRef.current.close();
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
   }, []);
 
   const probeUrl = async (u) => {
@@ -101,52 +108,110 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
     }
   };
 
-  const listenJob = (jobId) => {
-    if (esRef.current) esRef.current.close();
-    const es = new EventSource(`${BACKEND_URL}/api/stream/${jobId}`);
-    esRef.current = es;
+  const handleJobDone = (result) => {
+    if (!result) {
+      setPipeline(p => ({...p, logs: [...p.logs, '✗ 转换失败：未能生成教程']}));
+      setState('single');
+      return;
+    }
+    setResultData(result);
+    setState('done');
+    addTutorial?.(result);
+    if (user.tier === 'pack' && user.credits > 0) {
+      setUser({ ...user, credits: user.credits - 1 });
+    }
+  };
 
-    es.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'log') {
-        const msg = data.msg.trim();
-        if (!msg) return;
-        const stageMatch = msg.match(/\[(\d)\/7\]/);
-        setPipeline(p => ({
-          ...p,
-          stage: stageMatch ? parseInt(stageMatch[1]) : p.stage,
-          logs: [...p.logs, msg],
-        }));
-      } else if (data.type === 'done') {
-        es.close();
-        const result = data.result;
-        if (!result) {
-          alert('转换失败：未能生成教程，请查看日志了解原因');
+  // 轮询降级：SSE 挂了就每 5 秒查一次 /api/result
+  const startPolling = (jobId) => {
+    const poll = async () => {
+      if (jobIdRef.current !== jobId) return; // 任务已取消
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/result/${jobId}`);
+        if (resp.ok) {
+          const result = await resp.json();
+          handleJobDone(result);
+          return;
+        }
+        const errData = await resp.json().catch(() => ({}));
+        const detail = errData.detail || '';
+        if (detail.includes('failed') || detail.includes('失败')) {
+          setPipeline(p => ({...p, logs: [...p.logs, `✗ ${detail}`]}));
           setState('single');
           return;
         }
-        setResultData(result);
-        setState('done');
-        addTutorial?.(result);
-        if (user.tier === 'pack' && user.credits > 0) {
-          setUser({ ...user, credits: user.credits - 1 });
-        }
-      } else if (data.type === 'error') {
-        es.close();
-        alert('转换失败：' + data.msg);
-        setState('single');
+        // 仍在运行，继续轮询
+        pollTimerRef.current = setTimeout(poll, 5000);
+      } catch (_) {
+        pollTimerRef.current = setTimeout(poll, 5000);
       }
     };
+    poll();
+  };
 
-    es.onerror = () => {
-      es.close();
-      alert('转换连接断开，请重试');
-      setState('single');
+  const listenJob = (jobId) => {
+    jobIdRef.current = jobId;
+    if (esRef.current) esRef.current.close();
+    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+
+    let errorStreak = 0;
+
+    const connect = () => {
+      if (jobIdRef.current !== jobId) return;
+      if (esRef.current) esRef.current.close();
+
+      const es = new EventSource(`${BACKEND_URL}/api/stream/${jobId}`);
+      esRef.current = es;
+
+      es.onmessage = (event) => {
+        errorStreak = 0;
+        const data = JSON.parse(event.data);
+        if (data.type === 'log') {
+          const msg = data.msg.trim();
+          if (!msg) return;
+          const stageMatch = msg.match(/\[(\d)\/7\]/);
+          setPipeline(p => ({
+            ...p,
+            stage: stageMatch ? parseInt(stageMatch[1]) : p.stage,
+            logs: [...p.logs, msg],
+          }));
+        } else if (data.type === 'done') {
+          es.close();
+          handleJobDone(data.result);
+        } else if (data.type === 'error') {
+          es.close();
+          setPipeline(p => ({...p, logs: [...p.logs, `✗ ${data.msg}`]}));
+          setState('single');
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        errorStreak++;
+        if (errorStreak <= 4) {
+          // 静默重连，不打扰用户
+          const delay = Math.min(3000 * errorStreak, 12000);
+          setPipeline(p => ({...p, logs: [...p.logs,
+            `⚠️ 实时连接中断，${Math.round(delay/1000)}s 后重连（第 ${errorStreak} 次）...`]}));
+          reconnectTimerRef.current = setTimeout(connect, delay);
+        } else {
+          // 重连多次失败，降级为轮询
+          setPipeline(p => ({...p, logs: [...p.logs,
+            '⚡ 切换为轮询模式，继续等待结果...']}));
+          startPolling(jobId);
+        }
+      };
     };
+
+    connect();
   };
 
   const reset = () => {
     if (esRef.current) { esRef.current.close(); esRef.current = null; }
+    if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
+    if (pollTimerRef.current) { clearTimeout(pollTimerRef.current); pollTimerRef.current = null; }
+    jobIdRef.current = null;
     setState('empty');
     setUrl('');
     setProbed(null);
