@@ -175,11 +175,16 @@ const PIPELINE_STAGES = [
   { id: 7, name: '组装教程', icon: 'IconBook', desc: '生成 Markdown / 飞书文档' },
 ];
 
-// 是否在演示模式（GitHub Pages / 无后端服务）
-const IS_DEMO_HOST = (() => {
+// ── 后端地址配置 ────────────────────────────────────────────────────────────────
+// 本地开发：留空，前端用相对路径 /api/...
+// 线上部署：填入 Railway / Render 等部署地址，如：
+//   const BACKEND_URL = 'https://xueba-backend-production.up.railway.app';
+const BACKEND_URL = '';
+
+// 演示模式 = 没有配置后端地址 且 不在 localhost
+const IS_DEMO_HOST = !BACKEND_URL && (() => {
   const h = window.location.hostname;
-  return h.includes('github.io') || h.includes('github.com') ||
-    (!h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('0.0.0.0'));
+  return !h.includes('localhost') && !h.includes('127.0.0.1') && !h.includes('0.0.0.0');
 })();
 
-Object.assign(window, { SAMPLE_TUTORIALS, PLAYLIST_PROBE, PIPELINE_STAGES, IS_DEMO_HOST });
+Object.assign(window, { SAMPLE_TUTORIALS, PLAYLIST_PROBE, PIPELINE_STAGES, BACKEND_URL, IS_DEMO_HOST });

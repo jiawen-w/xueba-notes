@@ -43,7 +43,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
     setProbeError('');
     setState('probing');
     try {
-      const resp = await fetch('/api/probe', {
+      const resp = await fetch(`${BACKEND_URL}/api/probe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: u.trim() }),
@@ -87,7 +87,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
       : [url.trim()];
 
     try {
-      const resp = await fetch('/api/convert', {
+      const resp = await fetch(`${BACKEND_URL}/api/convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ urls }),
@@ -103,7 +103,7 @@ function WorkbenchPage({ navigate, user, setUser, addTutorial }) {
 
   const listenJob = (jobId) => {
     if (esRef.current) esRef.current.close();
-    const es = new EventSource(`/api/stream/${jobId}`);
+    const es = new EventSource(`${BACKEND_URL}/api/stream/${jobId}`);
     esRef.current = es;
 
     es.onmessage = (event) => {
